@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HireScope - AI Candidate Screening</title>
+    <style>
+        /* --- Global Styles & Variables --- */
+        :root {
+            --primary-green: #2A4A3A;
+            --secondary-mint: #98FF98;
+            --accent-lime: #C5F277;
+            --light-mint-bg: #E6F8E6;
+            --background-white: #FFFFFF;
+            --background-light: #f8f9fa;
+            --text-dark: #333333;
+            --text-light: #555555;
+            --border-color: #DDDDDD;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            margin: 0;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 25px;
+        }
+
+        /* --- Login Page --- */
+        #login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, var(--primary-green), #1e382c);
+        }
+        .login-card {
+            background: var(--background-white);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-card .logo { font-size: 2.5em; font-weight: 700; color: var(--primary-green); margin-bottom: 10px; }
+        .login-card .logo-tagline { color: var(--text-light); margin-bottom: 30px; }
+        .login-card input {
+            width: calc(100% - 20px);
+            padding: 12px 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        
+        /* --- General UI Components --- */
+        .btn {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+        .btn-primary { background-color: var(--primary-green); color: white; }
+        .btn-primary:hover { background-color: #1e382c; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
+        .btn-secondary { background-color: #e9ecef; color: var(--text-dark); }
+        .btn-secondary:hover { background-color: #d1d5d9; }
+        
+        /* --- Header / Navigation --- */
+        .header {
+            background-color: var(--background-white);
+            padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .header .logo { font-size: 1.8em; font-weight: 700; color: var(--primary-green); }
+        .user-profile { display: flex; align-items: center; gap: 15px; }
+        #logout-btn { color: var(--text-light); text-decoration: none; font-size: 0.9em; font-weight: 600; }
+        #logout-btn:hover { color: var(--primary-green); text-decoration: underline; }
+
+        /* --- Dashboard & Job Pages --- */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .page-header h1 { font-size: 2.2em; color: var(--text-dark); margin: 0; }
+        
+        .card {
+            background-color: var(--background-white);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .card h3 { margin-top: 0; color: var(--primary-green); }
+        .card p { color: var(--text-light); }
+        .job-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; }
+        .back-link { color: var(--primary-green); text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 20px; }
+        .back-link:hover { text-decoration: underline; }
+        
+        /* --- Analysis Report Page --- */
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--background-white);
+            box-shadow: var(--card-shadow);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .analysis-table th, .analysis-table td { padding: 15px 20px; text-align: left; }
+        .analysis-table thead { background-color: #f2f2f2; }
+        .analysis-table th { font-weight: 600; color: var(--text-light); text-transform: uppercase; font-size: 0.85em; }
+        .analysis-table tbody tr { border-bottom: 1px solid var(--border-color); }
+        .analysis-table tbody tr:last-child { border-bottom: none; }
+        .analysis-table tbody tr:hover { background-color: var(--light-mint-bg); }
+        .candidate-name { font-weight: 600; color: var(--primary-green); cursor: pointer; }
+        .candidate-name:hover { text-decoration: underline; }
+        .score-bar-container { display: flex; align-items: center; gap: 10px; }
+        .score-bar { width: 100px; height: 10px; background-color: #e0e0e0; border-radius: 5px; overflow: hidden; }
+        .score-fill { height: 100%; background: linear-gradient(to right, #6bb56b, var(--primary-green)); border-radius: 5px; }
+        
+        .tag { padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; display: inline-block; margin-right: 5px; }
+        .tag-gem { background-color: var(--light-mint-bg); color: #1e6a1e; border: 1px solid #a3d9a3; }
+        .tag-top { background-color: #f5fcdb; color: #6d7b2f; border: 1px solid #d9e0b4; }
+        
+        /* --- Candidate Detail Page --- */
+        .candidate-detail-header { background-color: var(--background-white); padding: 30px; border-radius: 8px; margin-bottom: 25px; box-shadow: var(--card-shadow); }
+        .candidate-detail-header h1 { margin: 0; font-size: 2.5em; }
+        .candidate-detail-header p { margin: 5px 0 0; font-size: 1.5em; color: var(--primary-green); font-weight: bold;}
+        .candidate-detail-actions { margin-top: 20px; display: flex; gap: 10px;}
+        .candidate-detail-body { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .detail-card { background: var(--background-white); padding: 25px; border-radius: 8px; box-shadow: var(--card-shadow); }
+        .detail-card h4 { font-size: 1.2em; color: var(--primary-green); margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;}
+        .detail-card ul { list-style-type: '✅'; padding-left: 20px; margin: 0; }
+        .detail-card ul.concerns { list-style-type: '⚠️'; }
+
+        /* --- Email Draft Page --- */
+        .email-draft-container { background: var(--background-white); border-radius: 8px; box-shadow: var(--card-shadow); }
+        .email-field { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center;}
+        .email-field span { font-weight: 600; color: var(--text-light); margin-right: 10px; }
+        .email-body { padding: 20px; height: 300px; overflow-y: auto; }
+
+        /* --- Calendar Page --- */
+        .calendar-container { background: var(--background-white); border-radius: 8px; box-shadow: var(--card-shadow); padding: 25px; }
+        .calendar-header { text-align: center; margin-bottom: 20px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .calendar-day { text-align: center; padding: 15px 10px; border-radius: 4px; }
+        .day-name { font-weight: 600; color: var(--text-light); }
+        .day-number { cursor: pointer; }
+        .day-number:hover { background-color: var(--light-mint-bg); }
+        .day-number.today { background-color: var(--primary-green); color: white; font-weight: bold; }
+        .day-number.empty { background-color: transparent; cursor: default; }
+
+        /* --- Share Modal & Toast --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: var(--background-white); padding: 30px; border-radius: 10px;
+            width: 90%; max-width: 500px;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { margin: 0; }
+        .modal-close { font-size: 2em; cursor: pointer; color: var(--text-light); border: none; background: none;}
+        .share-option { display: block; margin-bottom: 12px; }
+        .share-option label { margin-left: 8px; }
+        .modal-footer { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border-color); text-align: right; }
+        #toast-notification {
+            position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-green);
+            color: white; padding: 15px 25px; border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 2000;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        #toast-notification.show { opacity: 1; visibility: visible; }
+    </style>
+</head>
+<body>
+
+    <div id="login-page" class="page active">
+        <div class="login-card">
+            <div class="logo">HireScope 🌱</div>
+            <p class="logo-tagline">Find the needles in the haystack.</p>
+            <input type="email" value="sarah.hr@gsdatwork.com" placeholder="Email">
+            <input type="password" value="●●●●●●●●●●" placeholder="Password">
+            <button id="login-btn" class="btn btn-primary" style="width: 100%;">Login</button>
+        </div>
+    </div>
+
+    <div id="app-shell" style="display: none;">
+        <header class="header">
+            <div class="logo">HireScope 🌱</div>
+            <div class="user-profile">
+                <span>Sarah (HR Manager)</span>
+                <a href="#" id="logout-btn">Logout</a>
+            </div>
+        </header>
+
+        <div id="dashboard-page" class="page">
+            <main class="container">
+                <div class="page-header"><h1>Active Jobs</h1></div>
+                <div id="job-list-container" class="job-grid"></div>
+            </main>
+        </div>
+
+        <div id="job-detail-page" class="page">
+             <main class="container">
+                <a href="#" id="back-to-dashboard" class="back-link">← Back to All Jobs</a>
+                <div class="page-header">
+                    <h1 id="job-detail-title"></h1>
+                    <button id="share-top-5-btn" class="btn btn-primary">Share Top 5 with Hiring Team</button>
+                </div>
+                <h4>⭐ Top 5 Candidates</h4>
+                <table class="analysis-table" style="margin-bottom: 40px;">
+                    <thead><tr><th>Candidate</th><th>Score</th><th>Tags</th></tr></thead>
+                    <tbody id="top-5-table-body"></tbody>
+                </table>
+                <h4>All Candidates (<span id="total-candidates-count"></span>)</h4>
+                 <table class="analysis-table">
+                    <thead><tr><th>Rank</th><th>Candidate</th><th>Score</th><th>Tags</th><th>ATS Status</th></tr></thead>
+                    <tbody id="all-candidates-table-body"></tbody>
+                </table>
+            </main>
+        </div>
+        
+        <div id="candidate-detail-page" class="page">
+            <main class="container">
+                <a href="#" class="back-link" onclick="viewJobDetails(activeJobId); return false;">← Back to Job Report</a>
+                <div id="candidate-detail-content"></div>
+            </main>
+        </div>
+
+        <div id="email-draft-page" class="page">
+            <main class="container">
+                <a href="#" class="back-link" onclick="viewCandidatePage(activeJobId, activeCandidateId); return false;">← Cancel and Go Back</a>
+                <div class="page-header">
+                    <h1>Compose Email</h1>
+                    <button class="btn btn-primary" id="send-email-btn">Send Email</button>
+                </div>
+                <div id="email-draft-content" class="email-draft-container"></div>
+            </main>
+        </div>
+
+        <div id="schedule-page" class="page">
+            <main class="container">
+                <a href="#" class="back-link" onclick="viewCandidatePage(activeJobId, activeCandidateId); return false;">← Cancel and Go Back</a>
+                <div class="page-header">
+                    <h1 id="schedule-page-title"></h1>
+                    <button class="btn btn-primary" id="confirm-schedule-btn">Confirm Interview</button>
+                </div>
+                <div id="calendar-content" class="calendar-container"></div>
+            </main>
+        </div>
+    </div>
+    
+    <div id="share-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Share Report</h2><button class="modal-close" id="share-modal-close-btn">&times;</button></div>
+            <div>
+                <h4>Select recipients:</h4>
+                <div class="share-option"><input type="checkbox" id="role1" checked><label for="role1">Alex Cowan (Hiring Manager)</label></div>
+                <div class="share-option"><input type="checkbox" id="role2"><label for="role2">Christian Ulstrup (Department Head)</label></div>
+            </div>
+            <div class="modal-footer"><button id="send-share-btn" class="btn btn-primary">Send Report</button></div>
+        </div>
+    </div>
+    <div id="toast-notification"></div>
+
+    <script>
+        // ===================================
+        //          DUMMY DATA & STATE
+        // ===================================
+        let activeJobId = null;
+        let activeCandidateId = null;
+        const jobs = [
+            { id: 1, title: "Social Media Manager", applicants: 1049, department: "Marketing", status: "Analyzed" },
+            { id: 2, title: "Staff Accountant", applicants: 49, department: "Finance", status: "Analyzed" }
+        ];
+
+        const candidates = {
+            1: [ /* Data for 15 candidates */
+                { id: 101, rank: 1, name: "Jane Doe", email: "jane.doe@example.com", score: 92, summary: "Strong fit...", atsStatus: "Rejected (Phone Screen)", isHiddenGem: true, isTop5: true, strengths: ["Direct experience...", "Portfolio demonstrates...", "Expertise in TikTok..."], concerns: ["Lacks experience..."] },
+                { id: 102, rank: 2, name: "John Smith", email: "john.smith@example.com", score: 90, summary: "Excellent portfolio...", atsStatus: "Active", isHiddenGem: false, isTop5: true, strengths: ["Managed a team...", "Data-driven approach...", "Proficient with analytics..."], concerns: ["No direct experience..."] },
+                { id: 103, rank: 3, name: "Emily White", email: "emily.white@example.com", score: 88, summary: "Experience matches...", atsStatus: "Active", isHiddenGem: false, isTop5: true, strengths: ["Exceptional writing...", "Proven success...", "Experience running..."], concerns: ["Less experience..."] },
+                { id: 104, rank: 4, name: "Michael Brown", email: "michael.brown@example.com", score: 85, summary: "Recent graduate...", atsStatus: "New Applicant", isHiddenGem: false, isTop5: true, strengths: ["Internship at a Fortune 500...", "Creative and eager...", "Low salary expectation..."], concerns: ["Lacks long-term..."] },
+                { id: 105, rank: 5, name: "Sarah Green", email: "sarah.green@example.com", score: 82, summary: "Solid background...", atsStatus: "Active", isHiddenGem: false, isTop5: true, strengths: ["Understands the full marketing funnel...", "Strong analytical skills...", "Certified in Hubspot..."], concerns: ["Limited hands-on..."] },
+                { id: 106, rank: 6, name: "David Chen", email: "david.chen@example.com", score: 79, summary: "Freelance social media manager...", atsStatus: "Active", isHiddenGem: false, isTop5: false, strengths: ["Managed accounts..."], concerns: ["No experience..."] },
+                { id: 107, rank: 7, name: "Laura Martinez", email: "laura.martinez@example.com", score: 76, summary: "Background in traditional PR...", atsStatus: "Active", isHiddenGem: false, isTop5: false, strengths: ["Excellent at writing..."], concerns: ["Lacks quantitative..."] },
+                { id: 108, rank: 8, name: "Kevin Lee", email: "kevin.lee@example.com", score: 75, summary: "Runs a popular personal blog...", atsStatus: "New Applicant", isHiddenGem: false, isTop5: false, strengths: ["Grew a personal account..."], concerns: ["No professional..."] },
+                { id: 109, rank: 9, name: "Maria Garcia", email: "maria.garcia@example.com", score: 71, summary: "Has 3 years of experience...", atsStatus: "Rejected (Resume Screen)", isHiddenGem: true, isTop5: false, strengths: ["Familiar with marketing..."], concerns: ["Social media was only 20%..."] },
+                { id: 110, rank: 10, name: "Brian Wilson", email: "brian.wilson@example.com", score: 68, summary: "Customer service representative...", atsStatus: "Active", isHiddenGem: false, isTop5: false, strengths: ["Deep understanding..."], concerns: ["No marketing..."] },
+                { id: 111, rank: 11, name: "Olivia Taylor", email: "olivia.taylor@example.com", score: 65, summary: "Experience in event marketing...", atsStatus: "New Applicant", isHiddenGem: false, isTop5: false, strengths: ["Skilled at creating buzz..."], concerns: ["Lacks experience..."] },
+                { id: 112, rank: 12, name: "James Anderson", email: "james.anderson@example.com", score: 63, summary: "Graphic designer...", atsStatus: "Active", isHiddenGem: false, isTop5: false, strengths: ["Strong visual..."], concerns: ["No experience..."] },
+                { id: 113, rank: 13, name: "Sophia Rodriguez", email: "sophia.rodriguez@example.com", score: 60, summary: "Sales development representative...", atsStatus: "Rejected (Phone Screen)", isHiddenGem: false, isTop5: false, strengths: ["Proficient with LinkedIn..."], concerns: ["Experience is sales-focused..."] },
+                { id: 114, rank: 14, name: "Daniel Clark", email: "daniel.clark@example.com", score: 58, summary: "Content writer for blogs...", atsStatus: "Active", isHiddenGem: false, isTop5: false, strengths: ["Excellent long-form..."], concerns: ["Not experienced..."] },
+                { id: 115, rank: 15, name: "Chloe Lewis", email: "chloe.lewis@example.com", score: 55, summary: "Office manager...", atsStatus: "Rejected (Resume Screen)", isHiddenGem: false, isTop5: false, strengths: ["Reliable..."], concerns: ["Lacks strategic..."] }
+            ],
+            2: [ { id: 201, rank: 1, name: "Carlos Rodriguez", email: "carlos.r@example.com", score: 95, summary: "CPA with 4 years...", atsStatus: "Active", isHiddenGem: false, isTop5: true, strengths: ["CPA license..."], concerns: ["May have higher salary..."] } ]
+        };
+
+        // ===================================
+        //          APP LOGIC
+        // ===================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const pages = {
+                login: document.getElementById('login-page'), appShell: document.getElementById('app-shell'),
+                dashboard: document.getElementById('dashboard-page'), jobDetail: document.getElementById('job-detail-page'),
+                candidateDetail: document.getElementById('candidate-detail-page'), emailDraft: document.getElementById('email-draft-page'),
+                schedule: document.getElementById('schedule-page'),
+            };
+
+            const showPage = (pageName) => {
+                Object.values(pages).forEach(p => p.classList.remove('active'));
+                pages.login.style.display = 'none'; pages.appShell.style.display = 'none';
+                if (pageName === 'login') {
+                    pages.login.style.display = 'flex'; pages.login.classList.add('active');
+                } else {
+                    pages.appShell.style.display = 'block'; pages[pageName].classList.add('active');
+                }
+            };
+
+            const showToast = (message) => {
+                const toast = document.getElementById('toast-notification');
+                toast.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => { toast.classList.remove('show'); }, 3000);
+            };
+
+            // --- Event Listeners ---
+            document.getElementById('login-btn').addEventListener('click', () => { renderJobList(); showPage('dashboard'); });
+            document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); showPage('login'); });
+            document.getElementById('back-to-dashboard').addEventListener('click', (e) => { e.preventDefault(); showPage('dashboard'); });
+            document.getElementById('share-top-5-btn').addEventListener('click', () => document.getElementById('share-modal').style.display = 'flex');
+            document.getElementById('share-modal-close-btn').addEventListener('click', () => document.getElementById('share-modal').style.display = 'none');
+            document.getElementById('send-share-btn').addEventListener('click', () => { document.getElementById('share-modal').style.display = 'none'; showToast('Report sent successfully!'); });
+            document.getElementById('send-email-btn').addEventListener('click', () => { showToast('Email sent successfully!'); viewCandidatePage(activeJobId, activeCandidateId); });
+            document.getElementById('confirm-schedule-btn').addEventListener('click', () => { showToast('Interview scheduled successfully!'); viewCandidatePage(activeJobId, activeCandidateId); });
+
+            const renderJobList = () => {
+                const container = document.getElementById('job-list-container');
+                container.innerHTML = '';
+                jobs.forEach(job => {
+                    const card = document.createElement('div'); card.className = 'card';
+                    card.innerHTML = `<h3>${job.title}</h3><p>${job.department}</p><p><strong>${job.applicants}</strong> Applicants</p><p>Status: <strong>${job.status}</strong></p>`;
+                    if (job.status === 'Analyzed') card.addEventListener('click', () => viewJobDetails(job.id));
+                    else { card.style.cursor = 'not-allowed'; card.style.opacity = '0.6'; }
+                    container.appendChild(card);
+                });
+            };
+
+            window.viewJobDetails = (jobId) => {
+                activeJobId = jobId;
+                const job = jobs.find(j => j.id === jobId); const jobCandidates = candidates[jobId] || [];
+                document.getElementById('job-detail-title').textContent = job.title; document.getElementById('total-candidates-count').textContent = jobCandidates.length;
+                const top5Body = document.getElementById('top-5-table-body'); const allBody = document.getElementById('all-candidates-table-body');
+                top5Body.innerHTML = ''; allBody.innerHTML = '';
+                jobCandidates.filter(c => c.isTop5).forEach(c => top5Body.innerHTML += createCandidateRow(c, jobId, false));
+                jobCandidates.forEach(c => allBody.innerHTML += createCandidateRow(c, jobId, true));
+                showPage('jobDetail');
+            };
+
+            const createCandidateRow = (candidate, jobId, isFullView) => {
+                const tags = `${candidate.isTop5 ? '<span class="tag tag-top">Top 5</span>' : ''} ${candidate.isHiddenGem ? '<span class="tag tag-gem">Hidden Gem</span>' : ''}`;
+                const scoreHtml = `<div class="score-bar-container"><span>${candidate.score}/100</span><div class="score-bar"><div class="score-fill" style="width: ${candidate.score}%;"></div></div></div>`;
+                const nameHtml = `<div class="candidate-name" onclick="viewCandidatePage(${jobId}, ${candidate.id})">${candidate.name}</div>`;
+                if (isFullView) return `<tr><td>#${candidate.rank}</td><td>${nameHtml}</td><td>${scoreHtml}</td><td>${tags}</td><td>${candidate.atsStatus}</td></tr>`;
+                return `<tr><td>${nameHtml}</td><td>${scoreHtml}</td><td>${tags}</td></tr>`;
+            };
+
+            window.viewCandidatePage = (jobId, candidateId) => {
+                activeJobId = jobId; activeCandidateId = candidateId;
+                const candidate = candidates[jobId].find(c => c.id === candidateId);
+                const container = document.getElementById('candidate-detail-content');
+                let strengthsHtml = candidate.strengths.map(s => `<li>${s}</li>`).join(''); let concernsHtml = candidate.concerns.map(c => `<li>${c}</li>`).join('');
+                container.innerHTML = `
+                    <div class="candidate-detail-header"><h1>${candidate.name}</h1><p>AI Score: ${candidate.score}/100</p>
+                        <div class="candidate-detail-actions">
+                            <button class="btn btn-primary" onclick="showEmailDraft(${jobId}, ${candidateId})">✉️ Email Candidate</button>
+                            <button class="btn btn-secondary" onclick="showScheduler(${jobId}, ${candidateId})">🗓️ Schedule Interview</button>
+                        </div></div>
+                    <div class="candidate-detail-body"><div class="detail-card"><h4>AI Summary</h4><p>${candidate.summary}</p></div>
+                        <div class="detail-card"><h4>✅ AI-Identified Strengths</h4><ul>${strengthsHtml || '<li>N/A</li>'}</ul></div>
+                        <div class="detail-card"><h4>⚠️ Potential Concerns</h4><ul class="concerns">${concernsHtml || '<li>N/A</li>'}</ul></div>
+                        <div class="detail-card"><h4>ATS Information</h4><p><strong>Status:</strong> ${candidate.atsStatus}</p>${candidate.isHiddenGem ? '<p>⭐ <strong>Hidden Gem</strong></p>' : ''}</div></div>`;
+                showPage('candidateDetail');
+            };
+
+            window.showEmailDraft = (jobId, candidateId) => {
+                const candidate = candidates[jobId].find(c => c.id === candidateId); const job = jobs.find(j => j.id === jobId);
+                const container = document.getElementById('email-draft-content');
+                container.innerHTML = `
+                    <div class="email-field"><span>To:</span> ${candidate.name} &lt;${candidate.email}&gt;</div>
+                    <div class="email-field"><span>Subject:</span> Next Steps for the ${job.title} position at GSD at Work</div>
+                    <div class="email-body"><p>Hi ${candidate.name.split(' ')[0]},</p>
+                        <p>Thank you for your interest in the ${job.title} role. The hiring team was impressed with your background and would like to schedule a brief introductory call to discuss your experience and the position in more detail.</p>
+                        <p>Please let us know what times work best for you over the next few days.</p>
+                        <p>Best regards,</p><p>Sarah<br>HR Manager</p></div>`;
+                showPage('emailDraft');
+            };
+
+            window.showScheduler = (jobId, candidateId) => {
+                const candidate = candidates[jobId].find(c => c.id === candidateId);
+                document.getElementById('schedule-page-title').textContent = `Schedule Interview with ${candidate.name}`;
+                renderCalendar(document.getElementById('calendar-content'));
+                showPage('schedule');
+            };
+            
+            const renderCalendar = (container) => {
+                const year = 2025, month = 8; // September is month 8 (0-indexed)
+                const today = 16;
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                let html = `<div class="calendar-header"><h2>September 2025</h2></div><div class="calendar-grid">`;
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                dayNames.forEach(day => { html += `<div class="calendar-day day-name">${day}</div>`; });
+                
+                for(let i = 0; i < firstDay; i++) { html += `<div class="calendar-day day-number empty"></div>`; }
+                for(let i = 1; i <= daysInMonth; i++) {
+                    let className = 'calendar-day day-number';
+                    if (i === today) className += ' today';
+                    html += `<div class="${className}">${i}</div>`;
+                }
+                html += `</div>`;
+                container.innerHTML = html;
+            };
+        });
+    </script>
+</body>
+</html>
